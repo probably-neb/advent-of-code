@@ -14,15 +14,21 @@ pub fn main() !void {
 
     var safe_count: u32 = 0;
 
+    var nums_list = std.ArrayList(u32).init(alloc);
+
+    var arena = std.heap.ArenaAllocator.init(alloc);
+    const arena_alloc = arena.allocator();
+
     outer: while (line_iter.next()) |line| {
-        var nums_list = std.ArrayList(u32).init(alloc);
+        defer nums_list.clearRetainingCapacity();
+        defer _ = arena.reset(.retain_capacity);
         var num_iter = std.mem.tokenizeScalar(u8, line, ' ');
         while (num_iter.next()) |num_str| {
             const num = try std.fmt.parseInt(u32, num_str, 10);
             try nums_list.append(num);
         }
 
-        const buf = try alloc.dupe(u32, nums_list.items);
+        const buf = try arena_alloc.dupe(u32, nums_list.items);
         var nums = buf;
 
         var valid = false;
